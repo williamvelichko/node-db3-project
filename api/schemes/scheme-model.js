@@ -6,7 +6,7 @@ function find() {
     .leftJoin("steps as st", "st.scheme_id", "sc.scheme_id")
     .select("sc.scheme_id", "sc.scheme_name")
     .groupBy("sc.scheme_id")
-    .orderBy("sc.scheme_id")
+    .orderBy("sc.scheme_id", "ASC")
     .count("st.step_id as number_of_steps");
   /*
     1A- Study the SQL query below running it in SQLite Studio against `data/schemes.db3`.
@@ -26,7 +26,41 @@ function find() {
   */
 }
 
-function findById(scheme_id) {
+async function findById(scheme_id) {
+  const result = await db("schemes as sc")
+    .leftJoin("steps as st", "st.scheme_id", "sc.scheme_id")
+    .select(
+      "sc.scheme_id",
+      "sc.scheme_name",
+      "st.step_id as steps",
+      "st.step_number",
+      "instructions"
+    )
+    .orderBy("st.step_number", "ASC")
+    .where("sc.scheme_id", scheme_id);
+
+  const main = {
+    scheme_id: result[0].scheme_id,
+    scheme_name: result[0].scheme_name,
+    steps: [],
+  };
+
+  if (result[0].steps == null) {
+    return main;
+  }
+
+  for (let step of result) {
+    main.steps.push({
+      step_id: step.steps,
+      step_number: step.step_number,
+      instructions: step.instructions,
+    });
+  }
+  // "step_id": 5,
+  // "step_number": 1,
+  // "instructions": "collect all the sheep in Scotland"
+
+  return main;
   // EXERCISE B
   /*
     1B- Study the SQL query below running it in SQLite Studio against `data/schemes.db3`:
@@ -95,7 +129,14 @@ function findById(scheme_id) {
   */
 }
 
-function findSteps(scheme_id) {
+async function findSteps(scheme_id) {
+  const result = await db("schemes as sc")
+    .leftJoin("steps as st", "st.scheme_id", "sc.scheme_id")
+    .select("sc.scheme_name", "st.step_id", "st.step_number", "instructions")
+    .orderBy("st.step_number", "ASC")
+    .where("sc.scheme_id", scheme_id);
+
+  return result;
   // EXERCISE C
   /*
     1C- Build a query in Knex that returns the following data.
@@ -117,6 +158,10 @@ function findSteps(scheme_id) {
         }
       ]
   */
+}
+
+function checkId(scheme_id) {
+  return db("schemes").where("scheme_id", scheme_id).first();
 }
 
 function add(scheme) {
@@ -141,4 +186,5 @@ module.exports = {
   findSteps,
   add,
   addStep,
+  checkId,
 };
