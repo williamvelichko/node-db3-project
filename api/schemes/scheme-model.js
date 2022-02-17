@@ -136,6 +136,10 @@ async function findSteps(scheme_id) {
     .orderBy("st.step_number", "ASC")
     .where("sc.scheme_id", scheme_id);
 
+  if (result[0].step_id == null) {
+    return [];
+  }
+
   return result;
   // EXERCISE C
   /*
@@ -164,20 +168,31 @@ function checkId(scheme_id) {
   return db("schemes").where("scheme_id", scheme_id).first();
 }
 
-function add(scheme) {
+async function add(scheme) {
+  const [id] = await db("schemes").insert(scheme);
+
   // EXERCISE D
   /*
     1D- This function creates a new scheme and resolves to _the newly created scheme_.
   */
+  return checkId(id);
 }
 
-function addStep(scheme_id, step) {
+async function addStep(scheme_id, step) {
+  const result = await db("steps").insert({
+    step_number: step.step_number,
+    instructions: step.instructions,
+    scheme_id: scheme_id,
+  });
   // EXERCISE E
   /*
+  "step_number", step.step_number, "instructions", step.instructions
     1E- This function adds a step to the scheme with the given `scheme_id`
     and resolves to _all the steps_ belonging to the given `scheme_id`,
     including the newly created one.
   */
+
+  return findSteps(scheme_id);
 }
 
 module.exports = {
